@@ -3,28 +3,20 @@
 # Load Seed Data Script
 # =============================================================================
 # Description: Loads all seed data files in order
-# Usage: ./scripts/load-seeds.sh <database> <host> <user>
-# Example: ./scripts/load-seeds.sh lumanitech_projects localhost root
+# Usage: ./scripts/load-seeds.sh [options]
+# Example: ./scripts/load-seeds.sh --login-path=local -d lumanitech_projects
 # Exit Codes: 0 = success, 1 = error
 # =============================================================================
 
 set -e
 
-# Check arguments
-if [ $# -lt 3 ]; then
-    echo "Usage: $0 <database> <host> <user>"
-    echo "Example: $0 lumanitech_projects localhost root"
-    exit 1
-fi
-
-DATABASE=$1
-HOST=$2
-USER=$3
-
-SEEDS_DIR="seeds"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+SEEDS_DIR="seeds"
 SEEDS_PATH="$PROJECT_ROOT/$SEEDS_DIR"
+
+# Source common MySQL functions
+source "$SCRIPT_DIR/mysql-common.sh"
 
 # Colors for output
 RED='\033[0;31m'
@@ -33,13 +25,67 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# =============================================================================
+# Print usage information
+# =============================================================================
+print_usage() {
+    cat << EOF
+Load Seed Data Script
+
+Usage: $0 [options]
+
+Options:
+  -d, --database NAME  Database name (required)
+  --help               Show this help message
+
+$(print_mysql_help)
+
+Examples:
+  # Using login-path
+  $0 --login-path=local -d lumanitech_projects
+
+  # Using environment variable
+  export MYSQL_LOGIN_PATH=local
+  $0 -d lumanitech_projects
+
+  # Interactive (will prompt for password)
+  $0 -h localhost -u root -d lumanitech_projects
+EOF
+}
+
+# Parse MySQL connection arguments
+parse_mysql_args "$@"
+
+# Check for help
+for arg in "$@"; do
+    if [[ "$arg" == "--help" ]]; then
+        print_usage
+        exit 0
+    fi
+done
+
+# Validate required arguments
+if [[ -z "$DB_NAME" ]]; then
+    echo -e "${RED}ERROR: Database name is required${NC}"
+    echo ""
+    print_usage
+    exit 1
+fi
+
+# Setup MySQL command
+setup_mysql_cmd
+
 echo "=================================="
 echo "Seed Data Loading Script"
 echo "=================================="
 echo ""
-echo -e "${BLUE}Database: $DATABASE${NC}"
-echo -e "${BLUE}Host: $HOST${NC}"
-echo -e "${BLUE}User: $USER${NC}"
+echo -e "${BLUE}Database: $DB_NAME${NC}"
+echo -e "${BLUE}Host: $DB_HOST${NC}"
+if [[ -n "$LOGIN_PATH" ]]; then
+    echo -e "${BLUE}Login-path: $LOGIN_PATH${NC}"
+else
+    echo -e "${BLUE}User: $DB_USER${NC}"
+fi
 echo ""
 
 # Check if mysql client is available
@@ -54,15 +100,10 @@ if [ ! -d "$SEEDS_PATH" ]; then
     exit 1
 fi
 
-# Get password
-echo "Enter MySQL password:"
-read -s PASSWORD
-echo ""
-
 # Test database connection
 echo "Testing database connection..."
-if ! mysql -h "$HOST" -u "$USER" -p"$PASSWORD" -e "USE $DATABASE" 2>/dev/null; then
-    echo -e "${RED}ERROR: Cannot connect to database${NC}"
+if ! test_mysql_connection; then
+    echo -e "${RED}ERROR: Cannot connect to MySQL${NC}"
     echo "Please check your credentials and ensure the database exists"
     exit 1
 fi
@@ -100,7 +141,7 @@ for filepath in "${SEED_FILES[@]}"; do
     echo -e "${BLUE}Loading: $filename${NC}"
     
     # Load seed data
-    if mysql -h "$HOST" -u "$USER" -p"$PASSWORD" "$DATABASE" < "$filepath" 2>&1; then
+    if exec_mysql "$DB_NAME" < "$filepath" 2>&1 | grep -v "Using a password"; then
         echo -e "${GREEN}  ✓ Successfully loaded${NC}"
         SUCCESS=$((SUCCESS + 1))
     else

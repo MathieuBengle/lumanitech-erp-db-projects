@@ -3,23 +3,21 @@
 # Test Migrations Script
 # =============================================================================
 # Description: Creates a test database, applies all migrations, and validates
-# Usage: ./scripts/test-migrations.sh [test_db_name]
-# Example: ./scripts/test-migrations.sh test_lumanitech_projects
+# Usage: ./scripts/test-migrations.sh [options]
+# Example: ./scripts/test-migrations.sh --login-path=local --database=test_db
 # Exit Codes: 0 = success, 1 = error
 # Note: This script will DROP the test database if it exists!
 # =============================================================================
 
 set -e
 
-# Default test database name
-TEST_DB="${1:-test_lumanitech_projects}"
-HOST="localhost"
-USER="root"
-
-MIGRATIONS_DIR="migrations"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+MIGRATIONS_DIR="migrations"
 MIGRATIONS_PATH="$PROJECT_ROOT/$MIGRATIONS_DIR"
+
+# Source common MySQL functions
+source "$SCRIPT_DIR/mysql-common.sh"
 
 # Colors for output
 RED='\033[0;31m'
@@ -28,12 +26,67 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# =============================================================================
+# Print usage information
+# =============================================================================
+print_usage() {
+    cat << EOF
+Test Migrations Script
+
+Usage: $0 [options]
+
+Options:
+  -d, --database NAME  Test database name (default: test_lumanitech_projects)
+  --help               Show this help message
+
+$(print_mysql_help)
+
+WARNING: This script will DROP the test database if it exists!
+
+Examples:
+  # Using login-path
+  $0 --login-path=local
+
+  # Using environment variable with custom test db
+  export MYSQL_LOGIN_PATH=local
+  $0 -d my_test_db
+
+  # Interactive (will prompt for password)
+  $0 -h localhost -u root
+EOF
+}
+
+# Parse MySQL connection arguments
+parse_mysql_args "$@"
+
+# Check for help
+for arg in "$@"; do
+    if [[ "$arg" == "--help" ]]; then
+        print_usage
+        exit 0
+    fi
+done
+
+# Set default test database name if not provided
+if [[ -z "$DB_NAME" ]]; then
+    DB_NAME="test_lumanitech_projects"
+fi
+
+# Setup MySQL command
+setup_mysql_cmd
+
 echo "=================================="
 echo "Migration Testing Script"
 echo "=================================="
 echo ""
-echo -e "${BLUE}Test Database: $TEST_DB${NC}"
-echo -e "${YELLOW}WARNING: This will DROP the database '$TEST_DB' if it exists!${NC}"
+echo -e "${BLUE}Test Database: $DB_NAME${NC}"
+echo -e "${BLUE}Host: $DB_HOST${NC}"
+if [[ -n "$LOGIN_PATH" ]]; then
+    echo -e "${BLUE}Login-path: $LOGIN_PATH${NC}"
+else
+    echo -e "${BLUE}User: $DB_USER${NC}"
+fi
+echo -e "${YELLOW}WARNING: This will DROP the database '$DB_NAME' if it exists!${NC}"
 echo ""
 
 # Check if mysql client is available
@@ -48,15 +101,10 @@ if [ ! -d "$MIGRATIONS_PATH" ]; then
     exit 1
 fi
 
-# Get password
-echo "Enter MySQL root password:"
-read -s PASSWORD
-echo ""
-
 # Test database connection
 echo "Testing database connection..."
-if ! mysql -h "$HOST" -u "$USER" -p"$PASSWORD" -e "SELECT 1" 2>/dev/null; then
-    echo -e "${RED}ERROR: Cannot connect to database${NC}"
+if ! test_mysql_connection; then
+    echo -e "${RED}ERROR: Cannot connect to MySQL${NC}"
     exit 1
 fi
 echo -e "${GREEN}✓ Database connection successful${NC}"
@@ -73,13 +121,13 @@ echo ""
 
 # Drop test database if exists
 echo "Dropping test database if it exists..."
-mysql -h "$HOST" -u "$USER" -p"$PASSWORD" -e "DROP DATABASE IF EXISTS $TEST_DB" 2>&1
+exec_mysql -e "DROP DATABASE IF EXISTS $DB_NAME" 2>&1 | grep -v "Using a password"
 echo -e "${GREEN}✓ Dropped (or didn't exist)${NC}"
 echo ""
 
 # Create test database
 echo "Creating test database..."
-mysql -h "$HOST" -u "$USER" -p"$PASSWORD" -e "CREATE DATABASE $TEST_DB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci" 2>&1
+exec_mysql -e "CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci" 2>&1 | grep -v "Using a password"
 echo -e "${GREEN}✓ Test database created${NC}"
 echo ""
 
@@ -104,7 +152,7 @@ for filepath in "${MIGRATION_FILES[@]}"; do
     
     echo -e "${BLUE}  Applying: $filename${NC}"
     
-    if mysql -h "$HOST" -u "$USER" -p"$PASSWORD" "$TEST_DB" < "$filepath" 2>&1; then
+    if exec_mysql "$DB_NAME" < "$filepath" 2>&1 | grep -v "Using a password"; then
         echo -e "${GREEN}    ✓ Success${NC}"
         SUCCESS=$((SUCCESS + 1))
     else
@@ -122,7 +170,7 @@ if [ $FAILED -eq 0 ]; then
     
     # Check tables exist
     echo "Checking if tables were created..."
-    TABLES=$(mysql -h "$HOST" -u "$USER" -p"$PASSWORD" "$TEST_DB" -e "SHOW TABLES" -s)
+    TABLES=$(exec_mysql "$DB_NAME" -e "SHOW TABLES" -s 2>&1 | grep -v "Using a password")
     
     if [ -z "$TABLES" ]; then
         echo -e "${RED}  ✗ No tables found${NC}"
@@ -145,7 +193,7 @@ if [ $FAILED -eq 0 ]; then
         
         echo -e "${BLUE}  Re-applying: $filename${NC}"
         
-        if mysql -h "$HOST" -u "$USER" -p"$PASSWORD" "$TEST_DB" < "$filepath" 2>&1; then
+        if exec_mysql "$DB_NAME" < "$filepath" 2>&1 | grep -v "Using a password"; then
             echo -e "${GREEN}    ✓ Idempotent${NC}"
         else
             echo -e "${YELLOW}    ! Not idempotent (may be expected)${NC}"
@@ -157,7 +205,7 @@ fi
 
 # Cleanup - drop test database
 echo "Cleaning up..."
-mysql -h "$HOST" -u "$USER" -p"$PASSWORD" -e "DROP DATABASE IF EXISTS $TEST_DB" 2>&1
+exec_mysql -e "DROP DATABASE IF EXISTS $DB_NAME" 2>&1 | grep -v "Using a password"
 echo -e "${GREEN}✓ Test database dropped${NC}"
 echo ""
 

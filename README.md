@@ -76,33 +76,72 @@ Example using the validation script:
 
 ## Getting Started
 
+⚡ **Quick Start:** See [docs/QUICKSTART.md](docs/QUICKSTART.md) for detailed setup instructions with secure authentication.
+
 ### Prerequisites
 
 - MySQL 8.0 or higher
-- Access to the target database server
-- Migration tool (Flyway recommended) or use the provided scripts
+- MySQL client tools (includes `mysql` and `mysql_config_editor`)
+- Bash shell (Linux, macOS, or WSL2 on Windows)
+
+### Secure Authentication
+
+**Important:** All scripts support secure authentication using `mysql_config_editor` to avoid exposing passwords on the command line.
+
+Configure a login-path (one-time setup):
+
+```bash
+# Interactive helper
+./scripts/setup_login.sh
+
+# Or manually
+mysql_config_editor set --login-path=local --host=localhost --user=root --password
+```
+
+For detailed authentication options, see [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
 ### Initial Setup
+
+Create database, apply migrations, and optionally load seed data:
+
+```bash
+# Complete setup (recommended)
+./scripts/setup.sh --login-path=local -d lumanitech_projects --with-seeds
+
+# Or using environment variable
+export MYSQL_LOGIN_PATH=local
+./scripts/setup.sh -d lumanitech_projects --with-seeds
+```
+
+### Manual Setup (Alternative)
+
+If you prefer step-by-step:
 
 1. Create a new database:
 ```sql
 CREATE DATABASE lumanitech_projects CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-2. Apply all migrations in order:
+2. Apply all migrations:
 ```bash
-# Using the provided script
-./scripts/apply-migrations.sh <database_name> <host> <user>
-
-# Or apply manually
-mysql -h <host> -u <user> -p lumanitech_projects < migrations/V001__create_projects_table.sql
-mysql -h <host> -u <user> -p lumanitech_projects < migrations/V002__...
+./scripts/apply-migrations.sh --login-path=local -d lumanitech_projects
 ```
 
 3. (Optional) Load seed data:
 ```bash
-./scripts/load-seeds.sh <database_name> <host> <user>
+./scripts/load-seeds.sh --login-path=local -d lumanitech_projects
 ```
+
+### Authentication Methods
+
+Scripts use the following priority for authentication:
+
+1. CLI `--login-path` argument (recommended)
+2. `MYSQL_LOGIN_PATH` environment variable
+3. Auto-detect from mysql_config_editor
+4. Interactive password prompt (fallback)
+
+**Security Note:** Never use `-p'password'` or `MYSQL_PWD` environment variable. Always prefer `mysql_config_editor` login-path for secure credential storage.
 
 ### Development Workflow
 
@@ -132,8 +171,37 @@ This repository includes validation scripts for continuous integration:
 - **`scripts/validate-migrations.sh`**: Validates migration file naming and ordering
 - **`scripts/validate-sql-syntax.sh`**: Checks SQL syntax without executing
 - **`scripts/test-migrations.sh`**: Applies migrations to a test database
+- **`scripts/setup.sh`**: Complete database setup with migrations and seeds
+- **`scripts/apply-migrations.sh`**: Production deployment
+- **`scripts/load-seeds.sh`**: Development data loading
+- **`scripts/setup_login.sh`**: Interactive login-path configuration helper
 
 These scripts are designed to run in CI pipelines to catch issues before deployment.
+
+### Example GitHub Actions
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test_password
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure login-path
+        run: |
+          mysql_config_editor set --login-path=ci \
+            --host=127.0.0.1 --user=root --password <<< "test_password"
+      - name: Test migrations
+        run: |
+          export MYSQL_LOGIN_PATH=ci
+          ./scripts/test-migrations.sh -d test_db
+```
+
+For complete CI/CD examples, see [docs/QUICKSTART.md#cicd-integration](docs/QUICKSTART.md#cicd-integration).
 
 ## Best Practices
 
