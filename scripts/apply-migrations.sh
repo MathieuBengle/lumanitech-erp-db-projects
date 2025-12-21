@@ -131,7 +131,7 @@ for filepath in "${MIGRATION_FILES[@]}"; do
     echo -e "${BLUE}Applying: $filename${NC}"
     
     # Apply migration
-    if exec_mysql "$DB_NAME" < "$filepath" 2>&1 | grep -v "Using a password"; then
+    if exec_mysql "$DB_NAME" < "$filepath"; then
         echo -e "${GREEN}  ✓ Successfully applied${NC}"
         SUCCESS=$((SUCCESS + 1))
     else

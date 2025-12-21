@@ -141,7 +141,7 @@ for filepath in "${SEED_FILES[@]}"; do
     echo -e "${BLUE}Loading: $filename${NC}"
     
     # Load seed data
-    if exec_mysql "$DB_NAME" < "$filepath" 2>&1 | grep -v "Using a password"; then
+    if exec_mysql "$DB_NAME" < "$filepath"; then
         echo -e "${GREEN}  ✓ Successfully loaded${NC}"
         SUCCESS=$((SUCCESS + 1))
     else

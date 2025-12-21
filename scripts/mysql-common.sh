@@ -149,11 +149,13 @@ test_mysql_connection() {
 # Execute MySQL command
 # =============================================================================
 # Executes a MySQL command using the configured connection
+# Filters out password warnings automatically
 # Usage: exec_mysql [additional mysql args...]
 # Example: exec_mysql -e "SHOW DATABASES"
 # =============================================================================
 exec_mysql() {
-    "${MYSQL_CMD[@]}" "$@"
+    # Execute and filter password warnings
+    "${MYSQL_CMD[@]}" "$@" 2>&1 | grep -v "Using a password on the command line"
 }
 
 # =============================================================================

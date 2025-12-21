@@ -162,7 +162,7 @@ else
         filename=$(basename "$filepath")
         echo -e "${BLUE}  Applying: $filename${NC}"
         
-        if exec_mysql "$DB_NAME" < "$filepath" 2>&1 | grep -v "Using a password"; then
+        if exec_mysql "$DB_NAME" < "$filepath"; then
             echo -e "${GREEN}    ✓ Success${NC}"
             SUCCESS=$((SUCCESS + 1))
         else
@@ -199,7 +199,7 @@ if [[ "$WITH_SEEDS" == "true" ]]; then
             filename=$(basename "$filepath")
             echo -e "${BLUE}  Loading: $filename${NC}"
             
-            if exec_mysql "$DB_NAME" < "$filepath" 2>&1 | grep -v "Using a password"; then
+            if exec_mysql "$DB_NAME" < "$filepath"; then
                 echo -e "${GREEN}    ✓ Success${NC}"
                 SUCCESS=$((SUCCESS + 1))
             else

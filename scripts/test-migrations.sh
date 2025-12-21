@@ -121,13 +121,13 @@ echo ""
 
 # Drop test database if exists
 echo "Dropping test database if it exists..."
-exec_mysql -e "DROP DATABASE IF EXISTS $DB_NAME" 2>&1 | grep -v "Using a password"
+exec_mysql -e "DROP DATABASE IF EXISTS $DB_NAME"
 echo -e "${GREEN}✓ Dropped (or didn't exist)${NC}"
 echo ""
 
 # Create test database
 echo "Creating test database..."
-exec_mysql -e "CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci" 2>&1 | grep -v "Using a password"
+exec_mysql -e "CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
 echo -e "${GREEN}✓ Test database created${NC}"
 echo ""
 
@@ -152,7 +152,7 @@ for filepath in "${MIGRATION_FILES[@]}"; do
     
     echo -e "${BLUE}  Applying: $filename${NC}"
     
-    if exec_mysql "$DB_NAME" < "$filepath" 2>&1 | grep -v "Using a password"; then
+    if exec_mysql "$DB_NAME" < "$filepath"; then
         echo -e "${GREEN}    ✓ Success${NC}"
         SUCCESS=$((SUCCESS + 1))
     else
@@ -170,7 +170,7 @@ if [ $FAILED -eq 0 ]; then
     
     # Check tables exist
     echo "Checking if tables were created..."
-    TABLES=$(exec_mysql "$DB_NAME" -e "SHOW TABLES" -s 2>&1 | grep -v "Using a password")
+    TABLES=$(exec_mysql "$DB_NAME" -e "SHOW TABLES" -s)
     
     if [ -z "$TABLES" ]; then
         echo -e "${RED}  ✗ No tables found${NC}"
@@ -193,7 +193,7 @@ if [ $FAILED -eq 0 ]; then
         
         echo -e "${BLUE}  Re-applying: $filename${NC}"
         
-        if exec_mysql "$DB_NAME" < "$filepath" 2>&1 | grep -v "Using a password"; then
+        if exec_mysql "$DB_NAME" < "$filepath"; then
             echo -e "${GREEN}    ✓ Idempotent${NC}"
         else
             echo -e "${YELLOW}    ! Not idempotent (may be expected)${NC}"
@@ -205,7 +205,7 @@ fi
 
 # Cleanup - drop test database
 echo "Cleaning up..."
-exec_mysql -e "DROP DATABASE IF EXISTS $DB_NAME" 2>&1 | grep -v "Using a password"
+exec_mysql -e "DROP DATABASE IF EXISTS $DB_NAME"
 echo -e "${GREEN}✓ Test database dropped${NC}"
 echo ""
 
