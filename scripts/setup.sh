@@ -98,7 +98,9 @@ if [[ -z "$DB_NAME" ]]; then
 fi
 
 # Setup MySQL command
-setup_mysql_cmd
+if ! setup_mysql_cmd; then
+    exit 1
+fi
 
 echo "=================================="
 echo "Database Setup Script"

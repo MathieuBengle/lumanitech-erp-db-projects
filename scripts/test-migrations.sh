@@ -73,7 +73,9 @@ if [[ -z "$DB_NAME" ]]; then
 fi
 
 # Setup MySQL command
-setup_mysql_cmd
+if ! setup_mysql_cmd; then
+    exit 1
+fi
 
 echo "=================================="
 echo "Migration Testing Script"
@@ -187,6 +189,7 @@ fi
 if [ $FAILED -eq 0 ]; then
     echo "Testing idempotency (applying migrations again)..."
     
+    # Track idempotency failures (informational only, doesn't affect exit code)
     IDEMPOTENT=0
     for filepath in "${MIGRATION_FILES[@]}"; do
         filename=$(basename "$filepath")

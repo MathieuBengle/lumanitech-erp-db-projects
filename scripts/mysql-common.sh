@@ -118,16 +118,25 @@ setup_mysql_cmd() {
         return 0
     fi
     
-    # Priority 4: Interactive password prompt (fallback)
-    echo "[INFO] No login-path found. Please enter MySQL password." >&2
-    echo "Enter MySQL password for user '$DB_USER':" >&2
-    read -s password
+    # Priority 4: No fallback - require login-path for security
+    echo "[ERROR] No login-path configured." >&2
     echo "" >&2
-    
-    # Build command with password (least secure option)
-    MYSQL_CMD=(mysql -h "$DB_HOST" -u "$DB_USER" -p"$password")
-    
-    return 0
+    echo "For security reasons, password-based authentication is not supported." >&2
+    echo "Please configure a login-path using one of these methods:" >&2
+    echo "" >&2
+    echo "  1. Run the setup helper:" >&2
+    echo "     ./scripts/setup_login.sh" >&2
+    echo "" >&2
+    echo "  2. Configure manually:" >&2
+    echo "     mysql_config_editor set --login-path=local --host=localhost --user=root --password" >&2
+    echo "" >&2
+    echo "  3. Use command-line option:" >&2
+    echo "     $0 --login-path=local ..." >&2
+    echo "" >&2
+    echo "  4. Set environment variable:" >&2
+    echo "     export MYSQL_LOGIN_PATH=local" >&2
+    echo "" >&2
+    return 1
 }
 
 # =============================================================================
@@ -165,7 +174,7 @@ exec_mysql() {
 print_mysql_help() {
     cat << 'EOF'
 MySQL Connection Options:
-  --login-path=NAME    Use mysql_config_editor login-path (recommended)
+  --login-path=NAME    Use mysql_config_editor login-path (REQUIRED for security)
   -h, --host HOST      MySQL host (default: localhost)
   -u, --user USER      MySQL user (default: root)
   -d, --database NAME  Database name
@@ -177,14 +186,20 @@ Authentication Priority:
   1. CLI --login-path argument
   2. MYSQL_LOGIN_PATH environment variable
   3. Auto-detect first available login-path
-  4. Interactive password prompt
+  4. Error if no login-path found (password auth disabled for security)
 
 For secure authentication, use mysql_config_editor:
   mysql_config_editor set --login-path=local --host=localhost --user=root --password
+
+Or use the interactive helper:
+  ./scripts/setup_login.sh
 
 Then use:
   ./script.sh --login-path=local
   or
   export MYSQL_LOGIN_PATH=local && ./script.sh
+
+SECURITY NOTE: Interactive password prompts are disabled to prevent password
+exposure in process lists. Login-path configuration is required.
 EOF
 }
