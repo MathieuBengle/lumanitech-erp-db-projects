@@ -1,0 +1,53 @@
+# MySQL Database Repository .gitignore
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Editor and IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+tmp/
+temp/
+
+# Database dumps (except seed data)
+*.sql.gz
+*.sql.zip
+dumps/
+
+# Environment and secrets
+.env
+.env.local
+*.key
+*.pem
+secrets/
+
+# CI/CD temporary files
+.test-results/
+coverage/
+
+# Node modules (if using Node.js for validation scripts)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Python virtual environments (if using Python for validation scripts)
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Build artifacts
+dist/
+build/
