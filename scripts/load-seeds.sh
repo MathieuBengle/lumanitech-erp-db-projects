@@ -4,7 +4,7 @@
 # =============================================================================
 # Description: Loads all seed data files in order
 # Usage: ./scripts/load-seeds.sh [options]
-# Example: ./scripts/load-seeds.sh --login-path=local -d lumanitech_projects
+# Example: ./scripts/load-seeds.sh --login-path=local -d lumanitech_erp_projects
 # Exit Codes: 0 = success, 1 = error
 # =============================================================================
 

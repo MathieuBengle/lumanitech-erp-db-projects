@@ -65,7 +65,7 @@ for filepath in "${MIGRATION_FILES[@]}"; do
     # Validate naming convention
     if ! [[ "$filename" =~ $MIGRATION_PATTERN ]]; then
         echo -e "${RED}  ✗ Invalid naming convention${NC}"
-        echo "    Expected: V{version}__description.sql (e.g., V001__create_table.sql)"
+        echo "    Expected: V{version}_description.sql (e.g., V001_create_table.sql)"
         ERRORS=$((ERRORS + 1))
     else
         echo -e "${GREEN}  ✓ Naming convention valid${NC}"

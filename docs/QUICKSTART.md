@@ -103,14 +103,14 @@ Create the database, apply migrations, and optionally load seed data:
 
 ```bash
 # Using login-path (recommended)
-./scripts/setup.sh --login-path=local -d lumanitech_projects --with-seeds
+./scripts/setup.sh --login-path=local -d lumanitech_erp_projects --with-seeds
 
 # Using environment variable
 export MYSQL_LOGIN_PATH=local
-./scripts/setup.sh -d lumanitech_projects --with-seeds
+./scripts/setup.sh -d lumanitech_erp_projects --with-seeds
 
 # Force recreate (drops existing database)
-./scripts/setup.sh --login-path=local -d lumanitech_projects --force
+./scripts/setup.sh --login-path=local -d lumanitech_erp_projects --force
 ```
 
 ### Option 2: Step-by-Step Setup
@@ -121,19 +121,19 @@ If you prefer to run each step manually:
 
 ```bash
 # Using login-path
-mysql --login-path=local -e "CREATE DATABASE lumanitech_projects CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+mysql --login-path=local -e "CREATE DATABASE lumanitech_erp_projects CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
 ```
 
 #### 2. Apply migrations
 
 ```bash
-./scripts/apply-migrations.sh --login-path=local -d lumanitech_projects
+./scripts/apply-migrations.sh --login-path=local -d lumanitech_erp_projects
 ```
 
 #### 3. Load seed data (optional, for development)
 
 ```bash
-./scripts/load-seeds.sh --login-path=local -d lumanitech_projects
+./scripts/load-seeds.sh --login-path=local -d lumanitech_erp_projects
 ```
 
 ## Common Tasks
@@ -142,14 +142,14 @@ mysql --login-path=local -e "CREATE DATABASE lumanitech_projects CHARACTER SET u
 
 ```bash
 # Apply all pending migrations
-./scripts/apply-migrations.sh --login-path=local -d lumanitech_projects
+./scripts/apply-migrations.sh --login-path=local -d lumanitech_erp_projects
 ```
 
 ### Loading Sample Data
 
 ```bash
 # Load seed data into an existing database
-./scripts/load-seeds.sh --login-path=local -d lumanitech_projects
+./scripts/load-seeds.sh --login-path=local -d lumanitech_erp_projects
 ```
 
 ### Testing Migrations
@@ -258,7 +258,7 @@ jobs:
         run: ./scripts/test-migrations.sh -d test_db
       
       - name: Setup database with seeds
-        run: ./scripts/setup.sh -d lumanitech_projects --with-seeds --force
+        run: ./scripts/setup.sh -d lumanitech_erp_projects --with-seeds --force
 ```
 
 ### GitLab CI Example
@@ -305,7 +305,7 @@ mysql_config_editor set \
 
 # Then use it
 export MYSQL_LOGIN_PATH=ci
-./scripts/setup.sh -d lumanitech_projects
+./scripts/setup.sh -d lumanitech_erp_projects
 ```
 
 ## Script Options Reference
@@ -365,7 +365,7 @@ Test migrations on a temporary database (will DROP the test database!).
 ./scripts/test-migrations.sh [options]
 
 Options:
-  -d, --database NAME  Test database name (default: test_lumanitech_projects)
+  -d, --database NAME  Test database name (default: test_lumanitech_erp_projects)
   --login-path=NAME    Use mysql_config_editor login-path
   -h, --host HOST      MySQL host (default: localhost)
   -u, --user USER      MySQL user (default: root)
@@ -434,7 +434,7 @@ This warning should NOT appear when using `--login-path`. If you see it:
 Use the `--force` option to drop and recreate:
 
 ```bash
-./scripts/setup.sh --login-path=local -d lumanitech_projects --force
+./scripts/setup.sh --login-path=local -d lumanitech_erp_projects --force
 ```
 
 ### Permission denied when running scripts

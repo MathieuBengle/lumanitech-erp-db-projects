@@ -327,7 +327,7 @@ export MYSQL_LOGIN_PATH=local
 ```
 
 **Options**:
-- `-d, --database NAME` - Test database name (default: test_lumanitech_projects)
+- `-d, --database NAME` - Test database name (default: test_lumanitech_erp_projects)
 - `--login-path=NAME` - Use login-path for authentication
 - `-h, --host HOST` - MySQL host (default: localhost)
 - `-u, --user USER` - MySQL user (default: root)

@@ -4,7 +4,7 @@
 # =============================================================================
 # Description: Creates database and optionally applies migrations and seeds
 # Usage: ./scripts/setup.sh [options]
-# Example: ./scripts/setup.sh --login-path=local -d lumanitech_projects --with-seeds
+# Example: ./scripts/setup.sh --login-path=local -d lumanitech_erp_projects --with-seeds
 # =============================================================================
 
 set -e
@@ -45,14 +45,14 @@ $(print_mysql_help)
 
 Examples:
   # Using login-path
-  $0 --login-path=local -d lumanitech_projects --with-seeds
+  $0 --login-path=local -d lumanitech_erp_projects --with-seeds
 
   # Using environment variable
   export MYSQL_LOGIN_PATH=local
-  $0 -d lumanitech_projects
+  $0 -d lumanitech_erp_projects
 
   # Interactive (will prompt for password)
-  $0 -h localhost -u root -d lumanitech_projects
+  $0 -h localhost -u root -d lumanitech_erp_projects
 EOF
 }
 

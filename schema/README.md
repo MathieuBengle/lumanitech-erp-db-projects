@@ -28,11 +28,12 @@ The schema files in this directory serve as:
 To create a new database with the current schema:
 
 ```bash
-# Create the database
-mysql -u root -p -e "CREATE DATABASE lumanitech_projects CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+# Use the deploy script (recommended)
+./scripts/deploy.sh --login-path=local -d lumanitech_erp_projects
 
-# Apply the schema
-mysql -u root -p lumanitech_projects < complete_schema.sql
+# Or manually create and apply schema
+mysql -u root -p -e "CREATE DATABASE lumanitech_erp_projects CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -p lumanitech_erp_projects < complete_schema.sql
 ```
 
 ### Updating Schema Files
@@ -47,7 +48,7 @@ When you create a new migration:
 Example:
 ```bash
 # After applying your migration
-mysqldump -u root -p --no-data --skip-comments lumanitech_projects > schema/complete_schema.sql
+mysqldump -u root -p --no-data --skip-comments lumanitech_erp_projects > schema/complete_schema.sql
 ```
 
 ## Workflow
@@ -55,7 +56,7 @@ mysqldump -u root -p --no-data --skip-comments lumanitech_projects > schema/comp
 ```
 [New Requirement] 
     ↓
-[Create Migration] → migrations/V00X__description.sql
+[Create Migration] → migrations/V00X_description.sql
     ↓
 [Apply Migration]
     ↓
