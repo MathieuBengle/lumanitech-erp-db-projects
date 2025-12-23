@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration: V002__create_tasks_table.sql
+-- Migration: V002_create_tasks_table
 -- Description: Create the tasks table for project tasks
 -- Author: Projects API Team
 -- Date: 2025-12-21
@@ -32,3 +32,11 @@ CREATE TABLE IF NOT EXISTS tasks (
         REFERENCES projects(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 COMMENT='Project tasks table';
+
+-- =============================================================================
+-- Migration Tracking
+-- =============================================================================
+-- Record this migration in the schema_migrations table
+INSERT INTO schema_migrations (version, description)
+VALUES ('V002', 'create_tasks_table')
+ON DUPLICATE KEY UPDATE applied_at = CURRENT_TIMESTAMP;

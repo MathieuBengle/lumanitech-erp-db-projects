@@ -19,51 +19,49 @@ Seed data is used to:
 - May contain predictable or insecure values
 - Should be excluded from production deployments
 
-## File Naming Convention
-
-Seed files are numbered to ensure they are loaded in the correct order:
+## Directory Structure
 
 ```
-{number}_{description}.sql
+seeds/
+└── dev/           # Development seed data
 ```
-
-Examples:
-- `01_sample_projects.sql`
-- `02_sample_tasks.sql`
-- `03_sample_project_members.sql`
-
-## Current Seed Files
-
-1. **`01_sample_projects.sql`** - Sample project records
-2. **`02_sample_tasks.sql`** - Sample task records for the projects
-3. **`03_sample_project_members.sql`** - Sample team member assignments
 
 ## Loading Seed Data
 
-### Using the Utility Script
+### Using the Deploy Script (Recommended)
 
 ```bash
-# Load all seed files
-./scripts/load-seeds.sh lumanitech_projects localhost root
+# Load seeds during initial setup
+./scripts/deploy.sh --with-seeds
+```
 
-# The script will prompt for password
+### Using the Load Seeds Script
+
+```bash
+# With login-path (recommended)
+./scripts/load-seeds.sh --login-path=local -d lumanitech_erp_projects
+
+# With environment variable
+export MYSQL_LOGIN_PATH=local
+./scripts/load-seeds.sh -d lumanitech_erp_projects
 ```
 
 ### Manual Loading
 
 ```bash
-# Load seeds in order
-mysql -u root -p lumanitech_projects < seeds/01_sample_projects.sql
-mysql -u root -p lumanitech_projects < seeds/02_sample_tasks.sql
-mysql -u root -p lumanitech_projects < seeds/03_sample_project_members.sql
+# Load seeds in order from dev directory
+mysql -u root -p lumanitech_erp_projects < seeds/dev/01_sample_projects.sql
+mysql -u root -p lumanitech_erp_projects < seeds/dev/02_sample_tasks.sql
+mysql -u root -p lumanitech_erp_projects < seeds/dev/03_sample_project_members.sql
 ```
 
-### Loading Individual Seeds
+## Current Seed Files
 
-```bash
-# Load a specific seed file
-mysql -u root -p lumanitech_projects < seeds/01_sample_projects.sql
-```
+All seed files are located in `seeds/dev/`:
+
+1. **`01_sample_projects.sql`** - Sample project records
+2. **`02_sample_tasks.sql`** - Sample task records for the projects
+3. **`03_sample_project_members.sql`** - Sample team member assignments
 
 ## Creating New Seed Files
 
@@ -73,10 +71,12 @@ New seed files should be numbered sequentially based on their dependencies:
 - Tables with no foreign keys first
 - Tables with foreign keys after their parent tables
 
+All seed files should be created in the `seeds/dev/` directory.
+
 ### Step 2: Create the File
 
 ```bash
-touch seeds/04_your_seed_data.sql
+touch seeds/dev/04_your_seed_data.sql
 ```
 
 ### Step 3: Write Idempotent Seeds
@@ -153,37 +153,21 @@ Include various statuses to test different scenarios:
 - Draft/pending items
 - Cancelled/failed items
 
-## Environment-Specific Seeds
-
-For different environments, you can create environment-specific seed directories:
-
-```
-seeds/
-├── development/    # Rich sample data
-├── testing/        # Minimal test fixtures
-└── staging/        # Production-like sample data
-```
-
-Then load the appropriate set:
-
-```bash
-mysql -u root -p lumanitech_projects < seeds/development/*.sql
-```
-
 ## Resetting Development Database
 
 To start fresh:
 
 ```bash
 # Drop and recreate database
-mysql -u root -p -e "DROP DATABASE IF EXISTS lumanitech_projects;"
-mysql -u root -p -e "CREATE DATABASE lumanitech_projects CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -p -e "DROP DATABASE IF EXISTS lumanitech_erp_projects;"
+mysql -u root -p -e "CREATE DATABASE lumanitech_erp_projects CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-# Apply schema
-mysql -u root -p lumanitech_projects < schema/complete_schema.sql
+# Apply migrations and seeds using deploy script
+./scripts/deploy.sh --with-seeds
 
-# Load seeds
-./scripts/load-seeds.sh lumanitech_projects localhost root
+# Or manually apply schema and seeds
+mysql -u root -p lumanitech_erp_projects < schema/complete_schema.sql
+./scripts/load-seeds.sh --login-path=local -d lumanitech_erp_projects
 ```
 
 ## See Also

@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration: V003__create_project_members_table.sql
+-- Migration: V003_create_project_members_table
 -- Description: Create the project members table for tracking team assignments
 -- Author: Projects API Team
 -- Date: 2025-12-21
@@ -22,3 +22,11 @@ CREATE TABLE IF NOT EXISTS project_members (
         REFERENCES projects(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 COMMENT='Project team members table';
+
+-- =============================================================================
+-- Migration Tracking
+-- =============================================================================
+-- Record this migration in the schema_migrations table
+INSERT INTO schema_migrations (version, description)
+VALUES ('V003', 'create_project_members_table')
+ON DUPLICATE KEY UPDATE applied_at = CURRENT_TIMESTAMP;

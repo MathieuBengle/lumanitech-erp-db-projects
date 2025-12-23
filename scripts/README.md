@@ -16,7 +16,66 @@ All database scripts support **secure authentication** to avoid exposing passwor
 
 ### Core Scripts
 
-#### setup_login.sh (NEW)
+#### deploy.sh (NEW)
+
+Complete database deployment: creates database, applies schema, runs migrations, and optionally loads seeds.
+
+**Purpose**: One-command database deployment.
+
+**Usage**:
+```bash
+# Deploy with seeds
+./scripts/deploy.sh --login-path=local -d lumanitech_erp_projects --with-seeds
+
+# Deploy without seeds
+./scripts/deploy.sh --login-path=local -d lumanitech_erp_projects
+
+# Force recreate
+./scripts/deploy.sh --login-path=local -d lumanitech_erp_projects --force
+```
+
+**Options**:
+- `-d, --database NAME` - Database name (required)
+- `--login-path=NAME` - Use login-path for authentication
+- `-h, --host HOST` - MySQL host (default: localhost)
+- `-u, --user USER` - MySQL user (default: root)
+- `--with-seeds` - Load seed data after migrations
+- `--force` - Drop existing database if it exists
+- `--help` - Show help message
+
+**Exit Codes**:
+- 0: Deployment successful
+- 1: Error occurred
+
+---
+
+#### validate.sh (NEW)
+
+Validates migrations, SQL syntax, and repository structure.
+
+**Purpose**: Comprehensive validation before deployment.
+
+**Usage**:
+```bash
+./scripts/validate.sh
+```
+
+**Checks**:
+- ✅ Migration file naming convention (V###_description.sql)
+- ✅ No duplicate version numbers
+- ✅ No gaps in version sequence
+- ✅ Basic SQL syntax validation
+- ✅ TEMPLATE.sql validation
+- ✅ Schema directory structure
+- ✅ Seeds directory structure
+
+**Exit Codes**:
+- 0: All validations passed
+- 1: Validation errors found
+
+---
+
+#### setup_login.sh
 
 Interactive helper to configure mysql_config_editor login-path for secure authentication.
 
@@ -46,14 +105,14 @@ Complete database setup: create database, apply migrations, optionally load seed
 **Usage**:
 ```bash
 # With login-path (recommended)
-./scripts/setup.sh --login-path=local -d lumanitech_projects --with-seeds
+./scripts/setup.sh --login-path=local -d lumanitech_erp_projects --with-seeds
 
 # With environment variable
 export MYSQL_LOGIN_PATH=local
-./scripts/setup.sh -d lumanitech_projects --with-seeds
+./scripts/setup.sh -d lumanitech_erp_projects --with-seeds
 
 # Force recreate
-./scripts/setup.sh --login-path=local -d lumanitech_projects --force
+./scripts/setup.sh --login-path=local -d lumanitech_erp_projects --force
 ```
 
 **Options**:
@@ -171,14 +230,14 @@ Applies all migrations in order to a target database.
 **Usage**:
 ```bash
 # With login-path (recommended)
-./scripts/apply-migrations.sh --login-path=local -d lumanitech_projects
+./scripts/apply-migrations.sh --login-path=local -d lumanitech_erp_projects
 
 # With environment variable
 export MYSQL_LOGIN_PATH=local
-./scripts/apply-migrations.sh -d lumanitech_projects
+./scripts/apply-migrations.sh -d lumanitech_erp_projects
 
 # Interactive (will prompt for password)
-./scripts/apply-migrations.sh -h localhost -u root -d lumanitech_projects
+./scripts/apply-migrations.sh -h localhost -u root -d lumanitech_erp_projects
 ```
 
 **Options**:
@@ -213,14 +272,14 @@ Loads all seed data files in order.
 **Usage**:
 ```bash
 # With login-path (recommended)
-./scripts/load-seeds.sh --login-path=local -d lumanitech_projects
+./scripts/load-seeds.sh --login-path=local -d lumanitech_erp_projects
 
 # With environment variable
 export MYSQL_LOGIN_PATH=local
-./scripts/load-seeds.sh -d lumanitech_projects
+./scripts/load-seeds.sh -d lumanitech_erp_projects
 
 # Interactive (will prompt for password)
-./scripts/load-seeds.sh -h localhost -u root -d lumanitech_projects
+./scripts/load-seeds.sh -h localhost -u root -d lumanitech_erp_projects
 ```
 
 **Options**:
@@ -392,7 +451,7 @@ jobs:
         run: ./scripts/test-migrations.sh -d test_db
       
       - name: Setup database with seeds
-        run: ./scripts/setup.sh -d lumanitech_projects --with-seeds --force
+        run: ./scripts/deploy.sh -d lumanitech_erp_projects --with-seeds --force
 ```
 
 ### GitLab CI Example (UPDATED)
@@ -432,21 +491,20 @@ validate:
 # 1. Configure login-path (one-time)
 ./scripts/setup_login.sh
 
-# 2. Create database with migrations and seeds
-./scripts/setup.sh --login-path=local -d lumanitech_projects --with-seeds
+# 2. Deploy database with migrations and seeds
+./scripts/deploy.sh --login-path=local -d lumanitech_erp_projects --with-seeds
 ```
 
 ### Before Committing
 
 1. **Validate your migration**:
 ```bash
-./scripts/validate-migrations.sh
-./scripts/validate-sql-syntax.sh
+./scripts/validate.sh
 ```
 
-2. **Test on local database**:
+2. **Test deployment on local database**:
 ```bash
-./scripts/test-migrations.sh --login-path=local
+./scripts/deploy.sh --login-path=local -d test_lumanitech_erp_projects --force
 ```
 
 3. **Fix any issues** and re-run validations
@@ -454,13 +512,13 @@ validate:
 ### Applying to Development Database
 
 ```bash
-./scripts/apply-migrations.sh --login-path=local -d lumanitech_dev
+./scripts/deploy.sh --login-path=local -d lumanitech_erp_projects
 ```
 
 ### Loading Sample Data
 
 ```bash
-./scripts/load-seeds.sh --login-path=local -d lumanitech_dev
+./scripts/load-seeds.sh --login-path=local -d lumanitech_erp_projects
 ```
 
 ---
@@ -471,32 +529,31 @@ validate:
 
 ```bash
 # Complete setup with one command
-./scripts/setup.sh --login-path=local -d mydb --with-seeds
+./scripts/deploy.sh --login-path=local -d mydb --with-seeds
 ```
 
 ### Apply New Migrations
 
 ```bash
 # Just the migrations
-./scripts/apply-migrations.sh --login-path=local -d mydb
+./scripts/deploy.sh --login-path=local -d mydb
 ```
 
 ### Reset Development Database
 
 ```bash
 # Force recreate
-./scripts/setup.sh --login-path=local -d mydb --force --with-seeds
+./scripts/deploy.sh --login-path=local -d mydb --force --with-seeds
 ```
 
 ### Test Before Deploying
 
 ```bash
 # Validate
-./scripts/validate-migrations.sh
-./scripts/validate-sql-syntax.sh
+./scripts/validate.sh
 
-# Test
-./scripts/test-migrations.sh --login-path=local
+# Test deployment
+./scripts/deploy.sh --login-path=local -d test_db --force --with-seeds
 ```
 
 ---
