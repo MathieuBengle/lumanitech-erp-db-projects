@@ -12,6 +12,10 @@ All database scripts support **secure authentication** to avoid exposing passwor
 
 **See [../docs/QUICKSTART.md](../docs/QUICKSTART.md) for complete authentication setup guide.**
 
+**WSL2 local note:**
+Use a login-path configured with user 'admin' (for example:
+`mysql_config_editor set --login-path=local --host=localhost --user=admin --password`).
+
 ## Available Scripts
 
 ### Core Scripts

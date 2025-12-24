@@ -31,6 +31,10 @@ schema/
 └── indexes/                   # Additional indexes (if any)
 ```
 
+**Naming conventions:**
+- procedures: `sp_<name>.sql`
+- triggers: `trg_<name>.sql`
+
 ## Tables
 
 ### schema_migrations

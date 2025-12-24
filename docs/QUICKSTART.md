@@ -61,6 +61,13 @@ The script will:
 5. Test the connection
 6. Display usage examples
 
+**WSL2 local note:**
+Use a login-path configured with user 'admin'.
+Example:
+```bash
+mysql_config_editor set --login-path=local --host=localhost --user=admin --password
+```
+
 #### Manual setup (alternative)
 
 If you prefer to set up manually:

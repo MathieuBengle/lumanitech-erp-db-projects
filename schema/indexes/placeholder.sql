@@ -1,0 +1,2 @@
+-- Placeholder for standalone indexes
+-- Remove this file when adding actual index definitions

@@ -14,6 +14,13 @@ DB_NAME=""
 LOGIN_PATH=""
 
 # =============================================================================
+# Detect if running in WSL2
+# =============================================================================
+is_wsl2() {
+    grep -qi microsoft /proc/version 2>/dev/null
+}
+
+# =============================================================================
 # Parse common MySQL connection arguments
 # =============================================================================
 # Parses standard arguments: --login-path, -h/--host, -u/--user, database name
@@ -23,7 +30,13 @@ LOGIN_PATH=""
 parse_mysql_args() {
     # Default values
     DB_HOST="${DB_HOST:-localhost}"
-    DB_USER="${DB_USER:-root}"
+    if [[ -z "$DB_USER" ]]; then
+        if is_wsl2; then
+            DB_USER="admin"
+        else
+            DB_USER="root"
+        fi
+    fi
     
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -172,11 +185,16 @@ exec_mysql() {
 # Print MySQL connection help
 # =============================================================================
 print_mysql_help() {
-    cat << 'EOF'
+    local default_user="root"
+    if is_wsl2; then
+        default_user="admin"
+    fi
+    
+    cat << EOF
 MySQL Connection Options:
   --login-path=NAME    Use mysql_config_editor login-path (REQUIRED for security)
   -h, --host HOST      MySQL host (default: localhost)
-  -u, --user USER      MySQL user (default: root)
+  -u, --user USER      MySQL user (default: $default_user)
   -d, --database NAME  Database name
 
 Environment Variables:
@@ -189,7 +207,7 @@ Authentication Priority:
   4. Error if no login-path found (password auth disabled for security)
 
 For secure authentication, use mysql_config_editor:
-  mysql_config_editor set --login-path=local --host=localhost --user=root --password
+  mysql_config_editor set --login-path=local --host=localhost --user=$default_user --password
 
 Or use the interactive helper:
   ./scripts/setup_login.sh

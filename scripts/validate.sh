@@ -210,9 +210,58 @@ fi
 echo ""
 
 # =============================================================================
-# Step 5: Validate Seeds Structure
+# Step 5: Validate schema file naming
 # =============================================================================
-echo -e "${BLUE}Step 5: Validating seeds structure...${NC}"
+echo -e "${BLUE}Step 5: Validating schema file naming...${NC}"
+
+check_dir="$schema_dir/procedures"
+if [[ -d "$check_dir" ]]; then
+    found_files=false
+    for f in "$check_dir"/*.sql; do
+        [[ -f "$f" ]] || continue
+        found_files=true
+        name=$(basename "$f")
+        if [[ ! "$name" =~ ^sp_[a-z0-9_]+\.sql$ ]]; then
+            echo -e "${RED}✗ Invalid procedure filename: $name (expected sp_name.sql)${NC}"
+            ERRORS=$((ERRORS + 1))
+        else
+            echo -e "${GREEN}✓${NC} $name"
+        fi
+    done
+    if [[ "$found_files" == "false" ]]; then
+        echo -e "${YELLOW}⚠ No procedure files found${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠ schema/procedures directory not found${NC}"
+fi
+
+check_dir="$schema_dir/triggers"
+if [[ -d "$check_dir" ]]; then
+    found_files=false
+    for f in "$check_dir"/*.sql; do
+        [[ -f "$f" ]] || continue
+        found_files=true
+        name=$(basename "$f")
+        if [[ ! "$name" =~ ^trg_[a-z0-9_]+\.sql$ ]]; then
+            echo -e "${RED}✗ Invalid trigger filename: $name (expected trg_name.sql)${NC}"
+            ERRORS=$((ERRORS + 1))
+        else
+            echo -e "${GREEN}✓${NC} $name"
+        fi
+    done
+    if [[ "$found_files" == "false" ]]; then
+        echo -e "${YELLOW}⚠ No trigger files found${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠ schema/triggers directory not found${NC}"
+fi
+
+echo ""
+
+# =============================================================================
+# Step 6: Validate Seeds Structure
+# =============================================================================
+echo -e "${BLUE}Step 6: Validating seeds structure...${NC}"
 
 seeds_dir="$PROJECT_ROOT/seeds"
 dev_seeds_dir="$seeds_dir/dev"

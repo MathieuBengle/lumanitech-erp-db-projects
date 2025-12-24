@@ -109,6 +109,9 @@ fi
 echo "=================================="
 echo "Database Deployment"
 echo "=================================="
+if is_wsl2; then
+    echo "[INFO] WSL2 detected. Use --login-path configured with user 'admin'." >&2
+fi
 echo "Database: $DB_NAME"
 echo "With Seeds: $WITH_SEEDS"
 echo "Force Recreate: $FORCE"
