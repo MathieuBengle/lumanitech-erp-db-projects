@@ -143,22 +143,42 @@ echo ""
 # =============================================================================
 echo -e "${BLUE}Step 2: Applying schema...${NC}"
 
-# Apply schema files in order
-if [[ -d "$SCHEMA_PATH/tables" ]]; then
-    echo "Applying table definitions..."
-    for schema_file in "$SCHEMA_PATH"/tables/*.sql; do
-        if [[ -f "$schema_file" ]]; then
-            filename=$(basename "$schema_file")
-            echo -n "  - $filename... "
-            if exec_mysql "$DB_NAME" < "$schema_file" 2>/dev/null; then
-                echo -e "${GREEN}✓${NC}"
-            else
-                echo -e "${RED}✗${NC}"
-                echo -e "${RED}ERROR: Failed to apply $filename${NC}"
-                exit 1
-            fi
+apply_complete_schema_snapshot() {
+    local snapshot_file="$SCHEMA_PATH/complete_schema.sql"
+    if [[ -f "$snapshot_file" ]]; then
+        echo "Applying complete schema snapshot..."
+        if exec_mysql "$DB_NAME" < "$snapshot_file" 2>/dev/null; then
+            echo -e "${GREEN}✓ Complete schema applied${NC}"
+            return 0
+        else
+            echo -e "${RED}✗${NC}"
+            echo -e "${RED}ERROR: Failed to apply complete schema snapshot${NC}"
+            exit 1
         fi
-    done
+    fi
+    return 1
+}
+
+# Apply table definitions (snapshot preferred)
+if apply_complete_schema_snapshot; then
+    echo "Skipping individual table definitions (snapshot applied)."
+else
+    if [[ -d "$SCHEMA_PATH/tables" ]]; then
+        echo "Applying table definitions..."
+        for schema_file in "$SCHEMA_PATH"/tables/*.sql; do
+            if [[ -f "$schema_file" ]]; then
+                filename=$(basename "$schema_file")
+                echo -n "  - $filename... "
+                if exec_mysql "$DB_NAME" < "$schema_file" 2>/dev/null; then
+                    echo -e "${GREEN}✓${NC}"
+                else
+                    echo -e "${RED}✗${NC}"
+                    echo -e "${RED}ERROR: Failed to apply $filename${NC}"
+                    exit 1
+                fi
+            fi
+        done
+    fi
 fi
 
 # Apply views if they exist
