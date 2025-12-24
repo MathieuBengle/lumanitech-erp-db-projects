@@ -4,7 +4,7 @@
 # =============================================================================
 # Description: Creates database and optionally applies migrations and seeds
 # Usage: ./scripts/setup.sh [options]
-# Example: ./scripts/setup.sh --login-path=local -d lumanitech_projects --with-seeds
+# Example: ./scripts/setup.sh --login-path=local -d lumanitech_erp_projects --with-seeds
 # =============================================================================
 
 set -e
@@ -45,14 +45,14 @@ $(print_mysql_help)
 
 Examples:
   # Using login-path
-  $0 --login-path=local -d lumanitech_projects --with-seeds
+  $0 --login-path=local -d lumanitech_erp_projects --with-seeds
 
   # Using environment variable
   export MYSQL_LOGIN_PATH=local
-  $0 -d lumanitech_projects
+  $0 -d lumanitech_erp_projects
 
   # Interactive (will prompt for password)
-  $0 -h localhost -u root -d lumanitech_projects
+  $0 -h localhost -u root -d lumanitech_erp_projects
 EOF
 }
 
@@ -146,6 +146,49 @@ echo "Creating database '$DB_NAME'..."
 exec_mysql -e "CREATE DATABASE $DB_NAME CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
 echo -e "${GREEN}✓ Database created${NC}"
 echo ""
+
+# Apply schema before migrations
+apply_schema_dir() {
+    local dir_name=$1
+    local schema_dir="$PROJECT_ROOT/schema/$dir_name"
+    if [[ ! -d "$schema_dir" ]]; then
+        return
+    fi
+
+    echo "Processing schema/$dir_name..."
+    for file in "$schema_dir"/*.sql; do
+        [[ -f "$file" ]] || continue
+        basename_file=$(basename "$file")
+        [[ "$basename_file" == "placeholder.sql" ]] && continue
+        [[ "$basename_file" == "README.md" ]] && continue
+        echo "Applying schema/$dir_name/$basename_file..."
+        if ! exec_mysql "$DB_NAME" < "$file"; then
+            echo -e "${RED}Error: Failed to apply schema/$dir_name/$basename_file${NC}"
+            exit 1
+        fi
+    done
+}
+
+apply_table_snapshot() {
+    local snapshot_file="$PROJECT_ROOT/schema/complete_schema.sql"
+    if [[ -f "$snapshot_file" ]]; then
+        echo "Applying complete schema snapshot..."
+        if ! exec_mysql "$DB_NAME" < "$snapshot_file"; then
+            echo -e "${RED}Error: Failed to apply complete schema snapshot${NC}"
+            exit 1
+        fi
+    else
+        apply_schema_dir tables
+    fi
+}
+
+echo "Applying base schema definitions..."
+apply_table_snapshot
+apply_schema_dir views
+apply_schema_dir procedures
+apply_schema_dir functions
+apply_schema_dir triggers
+apply_schema_dir indexes
 
 # Apply migrations
 echo "Applying migrations..."

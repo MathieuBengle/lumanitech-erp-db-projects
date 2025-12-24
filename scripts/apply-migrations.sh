@@ -4,7 +4,7 @@
 # =============================================================================
 # Description: Applies all migrations in order to a target database
 # Usage: ./scripts/apply-migrations.sh [options]
-# Example: ./scripts/apply-migrations.sh --login-path=local -d lumanitech_projects
+# Example: ./scripts/apply-migrations.sh --login-path=local -d lumanitech_erp_projects
 # Exit Codes: 0 = success, 1 = error
 # =============================================================================
 
@@ -42,14 +42,14 @@ $(print_mysql_help)
 
 Examples:
   # Using login-path
-  $0 --login-path=local -d lumanitech_projects
+  $0 --login-path=local -d lumanitech_erp_projects
 
   # Using environment variable
   export MYSQL_LOGIN_PATH=local
-  $0 -d lumanitech_projects
+  $0 -d lumanitech_erp_projects
 
   # Interactive (will prompt for password)
-  $0 -h localhost -u root -d lumanitech_projects
+  $0 -h localhost -u root -d lumanitech_erp_projects
 EOF
 }
 

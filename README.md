@@ -49,29 +49,35 @@ This repository follows a **forward-only migration strategy**:
 
 Migrations follow this naming pattern:
 ```
-V{version}__description.sql
+V{version}_description.sql
 ```
 
 Examples:
-- `V001__create_projects_table.sql`
-- `V002__add_status_to_projects.sql`
-- `V003__create_tasks_table.sql`
+- `V000_create_schema_migrations_table.sql`
+- `V001_create_projects_table.sql`
+- `V002_create_tasks_table.sql`
+- `V003_create_project_members_table.sql`
 
 ### Version Format
 
 - **V**: Prefix indicating a versioned migration
-- **{version}**: Zero-padded integer (001, 002, 003, ...)
-- **__**: Double underscore separator
+- **{version}**: Zero-padded integer (000, 001, 002, 003, ...)
+- **_**: Single underscore separator
 - **{description}**: Snake_case description of the change
 - **.sql**: File extension
 
 ### Applying Migrations
 
-Migrations should be applied in version order using your migration tool of choice (Flyway, Liquibase, or custom scripts).
+Migrations should be applied in version order using the deployment script.
 
-Example using the validation script:
+Example using the deploy script:
 ```bash
-./scripts/validate-migrations.sh
+./scripts/deploy.sh --login-path=local -d lumanitech_erp_projects
+```
+
+Or validate migrations before deployment:
+```bash
+./scripts/validate.sh
 ```
 
 ## Getting Started
@@ -106,11 +112,11 @@ Create database, apply migrations, and optionally load seed data:
 
 ```bash
 # Complete setup (recommended)
-./scripts/setup.sh --login-path=local -d lumanitech_projects --with-seeds
+./scripts/deploy.sh --login-path=local -d lumanitech_erp_projects --with-seeds
 
 # Or using environment variable
 export MYSQL_LOGIN_PATH=local
-./scripts/setup.sh -d lumanitech_projects --with-seeds
+./scripts/deploy.sh -d lumanitech_erp_projects --with-seeds
 ```
 
 ### Manual Setup (Alternative)
@@ -119,17 +125,17 @@ If you prefer step-by-step:
 
 1. Create a new database:
 ```sql
-CREATE DATABASE lumanitech_projects CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE lumanitech_erp_projects CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-2. Apply all migrations:
+2. Apply migrations using deploy script:
 ```bash
-./scripts/apply-migrations.sh --login-path=local -d lumanitech_projects
+./scripts/deploy.sh --login-path=local -d lumanitech_erp_projects
 ```
 
 3. (Optional) Load seed data:
 ```bash
-./scripts/load-seeds.sh --login-path=local -d lumanitech_projects
+./scripts/deploy.sh --login-path=local -d lumanitech_erp_projects --with-seeds
 ```
 
 ### Authentication Methods
@@ -166,14 +172,16 @@ Scripts use the following priority for authentication:
 
 ## CI/CD Integration
 
-This repository includes validation scripts for continuous integration:
+This repository includes validation and deployment scripts for continuous integration:
 
+- **`scripts/validate.sh`**: Validates migration naming, SQL syntax, and structure
+- **`scripts/deploy.sh`**: Complete database deployment with migrations and optional seeds
 - **`scripts/validate-migrations.sh`**: Validates migration file naming and ordering
 - **`scripts/validate-sql-syntax.sh`**: Checks SQL syntax without executing
 - **`scripts/test-migrations.sh`**: Applies migrations to a test database
+- **`scripts/apply-migrations.sh`**: Applies migrations to target database
+- **`scripts/load-seeds.sh`**: Loads seed data from seeds/dev
 - **`scripts/setup.sh`**: Complete database setup with migrations and seeds
-- **`scripts/apply-migrations.sh`**: Production deployment
-- **`scripts/load-seeds.sh`**: Development data loading
 - **`scripts/setup_login.sh`**: Interactive login-path configuration helper
 
 These scripts are designed to run in CI pipelines to catch issues before deployment.
@@ -198,7 +206,8 @@ jobs:
       - name: Test migrations
         run: |
           export MYSQL_LOGIN_PATH=ci
-          ./scripts/test-migrations.sh -d test_db
+          ./scripts/validate.sh
+          ./scripts/deploy.sh -d test_db --with-seeds
 ```
 
 For complete CI/CD examples, see [docs/QUICKSTART.md#cicd-integration](docs/QUICKSTART.md#cicd-integration).

@@ -36,7 +36,7 @@ Test Migrations Script
 Usage: $0 [options]
 
 Options:
-  -d, --database NAME  Test database name (default: test_lumanitech_projects)
+  -d, --database NAME  Test database name (default: test_lumanitech_erp_projects)
   --help               Show this help message
 
 $(print_mysql_help)
@@ -69,7 +69,7 @@ done
 
 # Set default test database name if not provided
 if [[ -z "$DB_NAME" ]]; then
-    DB_NAME="test_lumanitech_projects"
+    DB_NAME="test_lumanitech_erp_projects"
 fi
 
 # Setup MySQL command

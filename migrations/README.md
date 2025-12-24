@@ -16,25 +16,26 @@ This repository follows a **forward-only migration strategy**. This means:
 All migration files follow this pattern:
 
 ```
-V{version}__description.sql
+V{version}_description.sql
 ```
 
 ### Components:
 
 - **V**: Required prefix indicating a versioned migration
-- **{version}**: Zero-padded sequential number (001, 002, 003, ...)
-- **__**: Double underscore separator (required)
+- **{version}**: Zero-padded sequential number (000, 001, 002, 003, ...)
+- **_**: Single underscore separator (required)
 - **{description}**: Snake_case description of the change
 - **.sql**: File extension
 
 ### Examples:
 
 ```
-V001__create_projects_table.sql
-V002__create_tasks_table.sql
-V003__create_project_members_table.sql
-V004__add_index_to_projects_status.sql
-V005__add_archived_flag_to_projects.sql
+V000_create_schema_migrations_table.sql
+V001_create_projects_table.sql
+V002_create_tasks_table.sql
+V003_create_project_members_table.sql
+V004_add_index_to_projects_status.sql
+V005_add_archived_flag_to_projects.sql
 ```
 
 ## Creating a New Migration
@@ -57,9 +58,17 @@ touch migrations/V00X__your_description.sql
 
 ### Step 3: Write the Migration
 
+Use the template file as a starting point:
+
+```bash
+cp migrations/TEMPLATE.sql migrations/V00X_your_description.sql
+```
+
+Then edit the migration:
+
 ```sql
 -- =============================================================================
--- Migration: V00X__your_description.sql
+-- Migration: V00X_your_description
 -- Description: Brief description of what this migration does
 -- Author: Your Name
 -- Date: YYYY-MM-DD
@@ -75,16 +84,24 @@ CREATE TABLE IF NOT EXISTS your_table (
 -- Or for alterations
 ALTER TABLE existing_table 
 ADD COLUMN IF NOT EXISTS new_column VARCHAR(255);
+
+-- =============================================================================
+-- Migration Tracking
+-- =============================================================================
+-- Record this migration in the schema_migrations table
+INSERT INTO schema_migrations (version, description)
+VALUES ('V00X', 'your_description')
+ON DUPLICATE KEY UPDATE applied_at = CURRENT_TIMESTAMP;
 ```
 
 ### Step 4: Test the Migration
 
 ```bash
 # Test on a local database
-mysql -u root -p test_database < migrations/V00X__your_description.sql
+mysql -u root -p test_database < migrations/V00X_your_description.sql
 
 # Verify it can be run multiple times (idempotency)
-mysql -u root -p test_database < migrations/V00X__your_description.sql
+mysql -u root -p test_database < migrations/V00X_your_description.sql
 ```
 
 ### Step 5: Update Schema Documentation
@@ -93,7 +110,7 @@ After creating and testing your migration:
 
 ```bash
 # Update the complete schema file
-mysqldump -u root -p --no-data --skip-comments lumanitech_projects > schema/complete_schema.sql
+mysqldump -u root -p --no-data --skip-comments lumanitech_erp_projects > schema/complete_schema.sql
 ```
 
 ### Step 6: Validate and Commit
@@ -103,7 +120,7 @@ mysqldump -u root -p --no-data --skip-comments lumanitech_projects > schema/comp
 ./scripts/validate-migrations.sh
 
 # Commit both migration and schema
-git add migrations/V00X__your_description.sql
+git add migrations/V00X_your_description.sql
 git add schema/complete_schema.sql
 git commit -m "Add migration: your description"
 ```
@@ -184,16 +201,17 @@ COMMIT;
 ./scripts/validate-migrations.sh
 
 # Apply all pending migrations
-./scripts/apply-migrations.sh lumanitech_projects localhost root
+./scripts/apply-migrations.sh --login-path=local -d lumanitech_erp_projects
 ```
 
 ### Manual Application
 
 ```bash
 # Apply migrations in order
-mysql -u root -p lumanitech_projects < migrations/V001__create_projects_table.sql
-mysql -u root -p lumanitech_projects < migrations/V002__create_tasks_table.sql
-mysql -u root -p lumanitech_projects < migrations/V003__create_project_members_table.sql
+mysql -u root -p lumanitech_erp_projects < migrations/V000_create_schema_migrations_table.sql
+mysql -u root -p lumanitech_erp_projects < migrations/V001_create_projects_table.sql
+mysql -u root -p lumanitech_erp_projects < migrations/V002_create_tasks_table.sql
+mysql -u root -p lumanitech_erp_projects < migrations/V003_create_project_members_table.sql
 ```
 
 ### Using Flyway (Recommended)

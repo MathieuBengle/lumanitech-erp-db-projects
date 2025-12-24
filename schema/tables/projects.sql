@@ -1,11 +1,8 @@
 -- =============================================================================
--- Migration: V001__create_projects_table.sql
--- Description: Create the main projects table
--- Author: Projects API Team
--- Date: 2025-12-21
+-- Table: projects
+-- Description: Main projects table
 -- =============================================================================
 
--- Create projects table
 CREATE TABLE IF NOT EXISTS projects (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     project_code VARCHAR(50) NOT NULL UNIQUE,
